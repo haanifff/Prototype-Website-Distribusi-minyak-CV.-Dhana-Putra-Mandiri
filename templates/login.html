@@ -1,50 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="signin-layout">
-    <section class="signin-photo">
-      <div class="brand">{% include "logo.html" %}</div>
-      <div class="signin-caption">
-        <p>CV Dhana Putra Mandiri</p>
-        <h2>
-          Operasional
-          <br>
-          distribusi minyak.
-        </h2>
-      </div>
+<div class="signin">
+  <header class="signin-header">
+    <div class="brand">{% include "logo.html" %}</div>
+    <span class="system"><i></i>{% if demo_mode %}Demo sintetis{% else %}Akses internal{% endif %}</span>
+  </header>
+  <div class="signin-body">
+    <section class="signin-intro">
+      <h1>Masuk ke<br><span>ruang kerja.</span></h1>
+      <p>{% if demo_mode %}Pilih peran untuk mencoba aplikasi distribusi CV Dhana Putra Mandiri dengan data sintetis.{% else %}Gunakan akun pegawai yang telah diundang untuk mengakses operasional distribusi CV Dhana Putra Mandiri.{% endif %}</p>
     </section>
-    <section class="signin-side">
-      <div class="signin-inner">
-        <span class="signin-icon">
-          <svg>
-            <use href="#lock" />
-          </svg>
-        </span>
-        <h1>Masuk pegawai</h1>
-        {% if demo_mode %}
-          <p>Pilih peran untuk membuka ruang kerja dengan data demo sintetis.</p>
-          <form action="/auth/demo/" method="post">
-            {% csrf_token %}
-            <label>
-              Peran pegawai<select name="role">
-              {% for r in roles %}
-                <option {% if r == 'Pemilik' %}selected{% endif %}>{{ r }}</option>
-              {% endfor %}
-              </select>
-            </label>
-            <button>
-              Masuk ke ruang kerja <span>→</span>
-            </button>
-          </form>
-        {% else %}
-          <p>Masuk menggunakan akun perusahaan yang telah diundang oleh administrator.</p>
-          <form method="post" action="/auth/start/">
-            {% csrf_token %}
-            <button>
-              Masuk dengan akun perusahaan <span>→</span>
-            </button>
-          </form>
-        {% endif %}
-      </div>
+    <section class="signin-form">
+      {% if demo_mode %}
+      <form action="/auth/demo/" method="post">
+        {% csrf_token %}
+        <fieldset><legend>Peran pegawai</legend>
+          {% for r in roles %}
+          <label class="role-choice">
+            <input type="radio" name="role" value="{{ r }}" {% if r == 'Pemilik' %}checked{% endif %} required>
+            <span>{{ r }}</span>
+            <small>{% if r == 'Admin' %}Pengaturan akun{% elif r == 'Gudang' %}Persediaan{% elif r == 'Penjualan' %}Pesanan{% elif r == 'Keuangan' %}Pembukuan{% elif r == 'Pemilik' %}Ringkasan usaha{% endif %}</small>
+          </label>
+          {% endfor %}
+        </fieldset>
+        <button>Masuk ke ruang kerja <span aria-hidden="true">→</span></button>
+      </form>
+      {% else %}
+      <form method="post" action="/auth/start/">
+        {% csrf_token %}
+        <h2>Akun perusahaan</h2>
+        <p>Verifikasi identitas Anda melalui penyedia login perusahaan.</p>
+        <button>Masuk dengan akun perusahaan <span aria-hidden="true">→</span></button>
+      </form>
+      {% endif %}
     </section>
   </div>
+</div>
 {% endblock %}

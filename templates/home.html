@@ -1,24 +1,12 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-  <section class="overview-hero">
-    <div class="hero-copy">
-      <p>
-        <span class="live-dot"></span> Gudang utama
-      </p>
-      <h1>Ringkasan operasional</h1>
-      <span>CV Dhana Putra Mandiri</span>
+  <header class="pagehead overview-head">
+    <div><h1>Ringkasan operasional</h1><p>CV Dhana Putra Mandiri</p></div>
+    <div class="inline-actions">{% include "filter.html" %}
+      {% if prompt %}<a class="button" href="{{ prompt.1 }}">+ {{ prompt.0 }}</a>{% endif %}
     </div>
-  </section>
-  <div class="sectionline">
-    <h2>{% if finance %}Ikhtisar keuangan{% else %}Aktivitas operasional{% endif %}</h2>
-    <div class="inline-actions">
-      {% if prompt %}
-        <a class="button" href="{{ prompt.1 }}">+ {{ prompt.0 }}</a>
-      {% endif %}
-      {% include "filter.html" %}
-    </div>
-  </div>
+  </header>
   <div class="metric-grid">
     {% for label,value,icon,url,scope in kpis %}
       <a class="metric metric-{{ forloop.counter }}" href="{{ url }}">

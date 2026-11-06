@@ -34,7 +34,7 @@ async function run() {
           path: path.join(process.env.QA_CAPTURE, "distribusi-masuk.png")
         });
       }
-      await page.getByLabel("Peran pegawai").selectOption(role);
+      await page.locator(`input[name="role"][value="${role}"]`).check();
       await Promise.all([page.waitForURL(url => url.pathname !== "/masuk/"), page.getByRole("button", {
         name: "Masuk ke ruang kerja"
       }).click()]);

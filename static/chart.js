@@ -62,14 +62,14 @@ if (chart) {
         x2: right,
         y1: y(value),
         y2: y(value),
-        stroke: "#dbe4db",
+        stroke: "var(--line)",
         "stroke-dasharray": "3 4"
       }), svg("text", {
         x: left - 7,
         y: y(value) + 3,
         "text-anchor": "end",
         "font-size": 10,
-        fill: "#607768"
+        fill: "var(--muted)"
       }, compact.format(value)));
     }
     const defs = svg("defs", {});
@@ -82,18 +82,18 @@ if (chart) {
     });
     fill.append(svg("stop", {
       offset: "0%",
-      "stop-color": "#4b9668",
+      "stop-color": "var(--chart-sales)",
       "stop-opacity": ".27"
     }), svg("stop", {
       offset: "100%",
-      "stop-color": "#4b9668",
+      "stop-color": "var(--chart-sales)",
       "stop-opacity": ".015"
     }));
     defs.append(fill);
     graph.append(defs);
     for (const [key, color] of [
-        ["sales", "#277a54"],
-        ["cost", "#c18c3c"]
+        ["sales", "var(--chart-sales)"],
+        ["cost", "var(--chart-cost)"]
       ]) {
       const line = data.map((d, i) => (i ? "L" : "M") + x(i) + " " + y(d[key])).join(" ");
       if (key === "sales") graph.append(svg("path", {
@@ -123,7 +123,7 @@ if (chart) {
         x: x(i),
         y: 148,
         "font-size": 10,
-        fill: "#607768",
+        fill: "var(--muted)",
         "text-anchor": "middle"
       }, short(data[i].date)));
     }
@@ -133,7 +133,7 @@ if (chart) {
     const cursor = svg("line", {
       y1: top,
       y2: base,
-      stroke: "#789b80",
+      stroke: "var(--quiet)",
       "stroke-dasharray": "3 3",
       visibility: "hidden"
     });
@@ -145,7 +145,7 @@ if (chart) {
       cursor.setAttribute("x2", x(i));
       cursor.setAttribute("visibility", "visible");
       tooltip.hidden = false;
-      tooltip.textContent = short(datum.date) + (datum.last ? "–" + short(datum.last) : "") + " · Penjualan " + money(datum.sales) + " · HPP " + money(datum.cost);
+      tooltip.textContent = short(datum.date) + (datum.last ? "â€“" + short(datum.last) : "") + " Â· Penjualan " + money(datum.sales) + " Â· HPP " + money(datum.cost);
     }
 
     function hide() {
