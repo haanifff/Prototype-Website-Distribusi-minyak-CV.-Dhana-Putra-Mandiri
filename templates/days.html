@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ title }}</h1>
+  <p>Konfirmasikan bahwa seluruh pengiriman hari tersebut sudah tercatat, termasuk hari tanpa penjualan.</p>
+  {% if user.role == "Gudang" %}
+    <form class="panel formgrid" method="post">
+      {% csrf_token %}
+      <label>
+        Tanggal<input type="date" name="day" required>
+      </label>
+      <label>
+        Status<select name="complete">
+        <option value="1">Lengkap</option>
+        <option value="0">Belum lengkap</option>
+        </select>
+      </label>
+      <div>
+        <button>Simpan</button>
+      </div>
+    </form>
+  {% endif %}
+  <div class="panel scroll">
+    <table>
+      <tr>
+        <th>Tanggal</th>
+        <th>Pencatatan</th>
+      </tr>
+      {% for d in days %}
+        <tr>
+          <td>{{ d.day }}</td>
+          <td>{{ d.complete|yesno:"Lengkap,Belum lengkap" }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td>Belum ada konfirmasi.</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endblock %}

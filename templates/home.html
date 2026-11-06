@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+  <section class="overview-hero">
+    <div class="hero-copy">
+      <p>
+        <span class="live-dot"></span> Gudang utama
+      </p>
+      <h1>Ringkasan operasional</h1>
+      <span>CV Dhana Putra Mandiri</span>
+    </div>
+  </section>
+  <div class="sectionline">
+    <h2>{% if finance %}Ikhtisar keuangan{% else %}Aktivitas operasional{% endif %}</h2>
+    <div class="inline-actions">
+      {% if prompt %}
+        <a class="button" href="{{ prompt.1 }}">+ {{ prompt.0 }}</a>
+      {% endif %}
+      {% include "filter.html" %}
+    </div>
+  </div>
+  <div class="metric-grid">
+    {% for label,value,icon,url,scope in kpis %}
+      <a class="metric metric-{{ forloop.counter }}" href="{{ url }}">
+        <div>
+          <span class="metric-icon">
+            <svg>
+              <use href="#{{ icon }}" />
+            </svg>
+          </span>
+          <span>{{ label }}</span>
+          <span class="metric-open">↗</span>
+        </div>
+        <strong>{{ value }}</strong>
+        <small>{{ scope }}</small>
+      </a>
+    {% endfor %}
+  </div>
+  <div class="workgrid">
+    {% if finance %}
+      <section class="panel chartpanel">
+        <div class="panelhead">
+          <div>
+            <h2>Tren penjualan</h2>
+            <p>Penjualan bersih dan harga pokok</p>
+          </div>
+          <label class="chart-mode">
+            <span class="sr-only">Agregasi grafik</span>
+            <select id="chart-mode">
+              <option value="day">Harian</option>
+              <option value="week">Mingguan</option>
+            </select>
+          </label>
+        </div>
+        <div class="chartkey">
+          <span>
+            <i>
+            </i>Penjualan bersih</span>
+            <span>
+              <i>
+              </i>HPP</span>
+            </div>
+            {{ chart|json_script:"chartdata" }}
+            <div id="chart"
+                 role="img"
+                 aria-label="Tren penjualan bersih dan HPP pada periode pilihan"></div>
+            <a class="panel-link"
+               href="/laporan/?awal={{ start|date:'Y-m-d' }}&akhir={{ end|date:'Y-m-d' }}">Buka laporan keuangan <span>→</span>
+            </a>
+          </section>
+    {% endif %}
+    <section class="panel actionpanel">
+      <div class="panelhead">
+        <div>
+          <h2>Perlu ditindaklanjuti</h2>
+          <p>Posisi per {{ end|date:"d F Y" }}</p>
+        </div>
+      </div>
+      {% for icon,label,value,caption,url in alerts %}
+        <a class="actionrow" href="{{ url }}">
+          <span class="actionicon ai-{{ icon }}">
+            <svg>
+              <use href="#{{ icon }}" />
+            </svg>
+          </span>
+          <span>
+            <b>{{ label }}</b>
+            <small>{{ caption }}</small>
+          </span>
+          <strong>{{ value }}</strong>
+          <span class="chev">›</span>
+        </a>
+      {% endfor %}
+    </section>
+  </div>
+  <section class="panel recent">
+    <div class="panelhead">
+      <div>
+        <h2>Transaksi terbaru</h2>
+        <p>Dokumen pada periode pilihan</p>
+      </div>
+      <a class="outline"
+         href="/dokumen/?awal={{ start|date:'Y-m-d' }}&akhir={{ end|date:'Y-m-d' }}">Semua dokumen <span>→</span>
+      </a>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Nomor dokumen</th>
+            <th>Tanggal</th>
+            <th>Jenis transaksi</th>
+            <th>Mitra</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in recent %}
+            <tr>
+              <td>
+                <a class="doc-number" href="/dokumen/{{ d.pk }}/">{{ d }}</a>
+              </td>
+              <td>{{ d.date|date:"d M Y" }}</td>
+              <td>{{ d.kind }}</td>
+              <td>{{ d.party|default:"Internal" }}</td>
+              <td>
+                <span class="status-chip" data-status="{{ d.status }}">{{ d.status }}</span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5">Belum ada dokumen pada periode ini. Pilih periode lain untuk melihat transaksi.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% if priorities %}
+    <section class="panel">
+      <div class="panelhead">
+        <div>
+          <h2>Prioritas pemeriksaan stok</h2>
+          <p>Kelas ABC dan estimasi cakupan per produk</p>
+        </div>
+        <a class="outline"
+           href="/analisis/?awal={{ start|date:'Y-m-d' }}&akhir={{ end|date:'Y-m-d' }}">Lihat analisis →</a>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Produk</th>
+              <th>Prioritas</th>
+              <th>Stok</th>
+              <th>Cakupan</th>
+              <th>Risiko</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in priorities %}
+              <tr>
+                <td>
+                  <a href="/stok/?produk={{ r.product.pk }}&awal={{ start|date:'Y-m-d' }}&akhir={{ end|date:'Y-m-d' }}">{{ r.product.brand }} {{ r.product.size }}</a>
+                </td>
+                <td>
+                  <span class="grade grade{{ r.class }}">{{ r.class }}</span>
+                </td>
+                <td>{{ r.stock }} {{ r.product.unit }}</td>
+                <td>{% if r.coverage != None %}{{ r.coverage|floatformat:1 }} hari{% else %}—{% endif %}</td>
+                <td>{{ r.risk }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+  <script defer src="{% static 'chart.js' %}"></script>
+{% endblock %}

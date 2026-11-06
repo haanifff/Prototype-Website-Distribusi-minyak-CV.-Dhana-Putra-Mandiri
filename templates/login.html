@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="signin-layout">
+    <section class="signin-photo">
+      <div class="brand">{% include "logo.html" %}</div>
+      <div class="signin-caption">
+        <p>CV Dhana Putra Mandiri</p>
+        <h2>
+          Operasional
+          <br>
+          distribusi minyak.
+        </h2>
+      </div>
+    </section>
+    <section class="signin-side">
+      <div class="signin-inner">
+        <span class="signin-icon">
+          <svg>
+            <use href="#lock" />
+          </svg>
+        </span>
+        <h1>Masuk pegawai</h1>
+        {% if demo_mode %}
+          <p>Pilih peran untuk membuka ruang kerja dengan data demo sintetis.</p>
+          <form action="/auth/demo/" method="post">
+            {% csrf_token %}
+            <label>
+              Peran pegawai<select name="role">
+              {% for r in roles %}
+                <option {% if r == 'Pemilik' %}selected{% endif %}>{{ r }}</option>
+              {% endfor %}
+              </select>
+            </label>
+            <button>
+              Masuk ke ruang kerja <span>→</span>
+            </button>
+          </form>
+        {% else %}
+          <p>Masuk menggunakan akun perusahaan yang telah diundang oleh administrator.</p>
+          <form method="post" action="/auth/start/">
+            {% csrf_token %}
+            <button>
+              Masuk dengan akun perusahaan <span>→</span>
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+{% endblock %}

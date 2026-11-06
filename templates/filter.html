@@ -1,0 +1,21 @@
+<details class="filter">
+  <summary>
+    <svg>
+      <use href="#calendar" />
+    </svg>{{ start|date:"d M" }} – {{ end|date:"d M Y" }} <span>⌄</span>
+  </summary>
+  <form method="get">
+    {% for k,v in request.GET.items %}
+      {% if k != "awal" and k != "akhir" and k != "ekspor" and k != "hal" %}
+        <input type="hidden" name="{{ k }}" value="{{ v }}">
+      {% endif %}
+    {% endfor %}
+    <label>
+      Mulai<input name="awal" type="date" value="{{ start|date:'Y-m-d' }}" required>
+    </label>
+    <label>
+      Sampai<input name="akhir" type="date" value="{{ end|date:'Y-m-d' }}" required>
+    </label>
+    <button>Terapkan periode</button>
+  </form>
+</details>

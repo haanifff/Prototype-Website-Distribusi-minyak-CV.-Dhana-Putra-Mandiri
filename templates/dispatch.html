@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="pagehead">
+    <div>
+      <div class="eyebrow">CV DHANA PUTRA MANDIRI</div>
+      <h1>Surat jalan</h1>
+      <p>SJ-{{ doc.pk|stringformat:"05d" }} · {{ doc.date }}</p>
+    </div>
+    <button type="button" id="print">Cetak surat jalan</button>
+  </div>
+  <section class="panel pad">
+    <p>
+      Gudang asal <strong>Gudang utama</strong>
+      <br>
+      Penerima <strong>{{ doc.party.name }}</strong>
+      <br>
+      Referensi faktur <strong>{{ doc }}</strong>
+    </p>
+    <table>
+      <tr>
+        <th>Kode</th>
+        <th>Barang</th>
+        <th>Jumlah diserahkan</th>
+        <th>Satuan</th>
+      </tr>
+      {% for l in lines %}
+        <tr>
+          <td>{{ l.product.code }}</td>
+          <td>{{ l.product.brand }} {{ l.product.size }} · {{ l.product.pack }}</td>
+          <td>{{ l.qty }}</td>
+          <td>{{ l.product.unit }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+    <div class="signatures">
+      <span>Petugas gudang</span>
+      <span>Pengantar</span>
+      <span>Penerima</span>
+    </div>
+    {% if demo_mode %}
+      <p>Data demo sintetis</p>
+    {% endif %}
+  </section>
+{% endblock %}

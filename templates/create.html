@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ title }}</h1>
+  <form class="panel formgrid" method="post" id="draft-form">
+    {% csrf_token %}
+    <input name="token" type="hidden" value="{{ token }}">
+    <label>
+      Tanggal dokumen<input type="date" name="day" value="{{ today|date:'Y-m-d' }}" required>
+    </label>
+    {% if kind == "Retur" or kind == "Retur pemasok" %}
+      <label>
+        Dokumen asal<select name="ref" required>
+        <option value="">Pilih dokumen</option>
+        {% for d in origins %}
+          <option value="{{ d.pk }}">{{ d }} · {{ d.party }}</option>
+        {% endfor %}
+        </select>
+      </label>
+    {% elif kind != "Opname" %}
+      <label>
+        Mitra<select name="party" required>
+        <option value="">Pilih mitra</option>
+        {% for p in parties %}
+          <option value="{{ p.pk }}">{{ p }}</option>
+        {% endfor %}
+        </select>
+      </label>
+    {% endif %}
+    {% if kind == "Penjualan" %}
+      <label>
+        Syarat pembayaran<select name="terms">
+        <option>Tempo</option>
+        <option>Tunai</option>
+        </select>
+      </label>
+      <label>
+        Jatuh tempo<input type="date" name="due" value="{{ today|date:'Y-m-d' }}">
+      </label>
+    {% endif %}
+    <div class="wide" id="lines">
+      <h2>Rincian barang</h2>
+      <div class="lineform">
+        <label>
+          Produk<select name="product" required>
+          <option value="">Pilih produk</option>
+          {% for p in products %}
+            <option value="{{ p.pk }}" data-unit="{{ p.unit }}">{{ p.code }} · {{ p }}</option>
+          {% endfor %}
+          </select>
+        </label>
+        <label>
+          Jumlah<input type="number" name="qty" min="1" step="1" required>
+        </label>
+        <label>
+          Satuan<select name="conversion">
+          <option value="">Satuan dasar produk</option>
+          {% for c in conversions %}
+            <option value="{{ c.pk }}"
+                    data-product="{{ c.product_id }}" data-factor="{{ c.factor }}">{{ c.product.code }} · {{ c.label }} (×{{ c.factor }})</option>
+          {% endfor %}
+          </select>
+        </label>
+        {% if kind == "Penjualan" %}
+          <label>
+            Harga per satuan dasar (Rp)<input type="number"
+                                              min="1"
+                                              name="price"
+                                              placeholder="Gunakan harga bertingkat">
+          </label>
+          <label>
+            Diskon total baris (Rp)<input type="number" min="0" name="discount" value="0">
+          </label>
+          <output class="line-subtotal wide">Pilih produk dan isi jumlah untuk melihat subtotal.</output>
+        {% elif kind == "Retur" %}
+          <label>
+            Kondisi<select name="damaged">
+            <option value="">Layak jual</option>
+            <option value="1">Rusak</option>
+            </select>
+          </label>
+        {% elif kind == "Opname" %}
+          <label>
+            Koreksi<select name="direction">
+            <option>tambah</option>
+            <option>kurang</option>
+            </select>
+          </label>
+        {% endif %}
+      </div>
+    </div>
+    <div class="wide">
+      <button type="button" class="secondary" id="addline">+ Tambah baris</button>
+    </div>
+    <label class="wide">
+      Catatan / alasan<textarea name="note" maxlength="400">
+</textarea>
+    </label>
+    {% if kind == "Penjualan" %}{{ price_tiers|json_script:"price-tiers" }}<div class="draft-total wide"><span>Total draf</span><strong id="draft-total">—</strong></div>{% endif %}
+    <div class="wide draft-impact">Draf disimpan untuk diperiksa. {% if kind == "Penjualan" %}Stok, HPP, dan tagihan dibukukan saat penyerahan dikonfirmasi.{% else %}Stok diperbarui setelah dokumen dibukukan.{% endif %}</div>
+    <div>
+      <button>Simpan draf</button>
+    </div>
+  </form>
+{% endblock %}

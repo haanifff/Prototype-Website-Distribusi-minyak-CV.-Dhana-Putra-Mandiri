@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id" data-type="software">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#0c352b">
+    <meta name="page-type" content="software">
+    <meta name="site-kind" content="software">
+    <title>{{ title|default:"Masuk pegawai" }} · Dhana Putra Mandiri</title>
+    <link rel="stylesheet" href="{% static 'app.css' %}">
+    <link rel="stylesheet" href="{% static 'workspace.css' %}">
+    <script defer src="{% static 'app.js' %}"></script>
+  </head>
+  <body>
+    {% include "icons.html" %}
+    {% include "workspace-icons.html" %}
+    {% if user.is_authenticated %}
+      <a class="skip" href="#content">Langsung ke isi</a>
+      <aside id="sidebar">
+        <a class="brand" href="/">{% include "logo.html" %}</a>
+        <nav aria-label="Navigasi utama">
+          {% for item in sidebar %}
+            {% if item.group %}
+              <small>{{ item.group }}</small>
+            {% endif %}
+            <a href="{{ item.url }}"
+               {% if item.active %}class="active" aria-current="page"{% endif %}>
+              <svg aria-hidden="true">
+                <use href="#{{ item.icon }}" />
+              </svg>
+              <span>{{ item.label }}</span>
+              {% if item.badge %}
+                <b class="navcount">{{ item.badge }}</b>
+              {% endif %}
+            </a>
+          {% endfor %}
+        </nav>
+        <div class="profile">
+          <span class="avatar">{{ user.first_name|default:user.role|slice:":1" }}</span>
+          <div>
+            <b>{{ user.first_name|default:user.username }}</b>
+            <small>{{ user.role }}</small>
+          </div>
+          <form method="post" action="/keluar/">
+            {% csrf_token %}
+            <button class="icon" title="Keluar" aria-label="Keluar">
+              <svg>
+                <use href="#exit" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      </aside>
+      <button class="scrim" aria-label="Tutup navigasi" hidden></button>
+      <div class="shell">
+        <header class="topbar">
+          <button class="mobile icon"
+                  id="toggle"
+                  aria-controls="sidebar"
+                  aria-expanded="false"
+                  aria-label="Buka navigasi">
+            <svg>
+              <use href="#menu" />
+            </svg>
+          </button>
+          <span class="location">
+            <svg>
+              <use href="#warehouse" />
+            </svg>
+            Gudang utama <em>/</em> <strong>{{ title }}</strong>
+          </span>
+          <div class="header-end">
+            {% if demo_mode %}
+              <span class="system">
+                <i>
+                </i>Demo sintetis</span>
+            {% endif %}
+            <span class="header-date">
+              <svg>
+                <use href="#calendar" />
+              </svg>{{ today|date:"d M Y" }}</span>
+            </div>
+          </header>
+          <main id="content">
+    {% else %}
+      <main class="public" id="content">
+    {% endif %}
+    {% for m in messages %}
+      <p role="status" class="notice">{{ m }}</p>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  {% if user.is_authenticated %}
+    </div>
+  {% endif %}
+</body>
+</html>

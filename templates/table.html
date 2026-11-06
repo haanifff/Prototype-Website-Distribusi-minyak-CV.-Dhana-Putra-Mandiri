@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load display %}
+{% block content %}
+  <div class="pagehead">
+    <h1>{{ title }}</h1>
+    <div class="inline-actions">
+      {% if start %}
+        {% include "filter.html" %}
+      {% endif %}
+      {% for label,path in actions %}
+        <a class="button" href="{{ path }}">{{ label }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  {% if tabs %}
+    <div class="tabs">
+      {% for label,path in tabs %}
+        <a href="{{ path }}">{{ label }}</a>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <section class="panel data-panel">
+    {% if search %}
+      <form class="table-tools" method="get">
+        <label class="sr-only" for="find-doc">Cari dokumen atau mitra</label>
+        <input id="find-doc"
+               name="q"
+               placeholder="Cari nomor dokumen atau mitra…"
+               value="{{ request.GET.q }}">
+        {% if statuses %}
+          <label class="sr-only" for="status">Status dokumen</label>
+          <select id="status" name="status">
+            <option value="">Semua status</option>
+            {% for s in statuses %}
+              <option {% if s == request.GET.status %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        {% endif %}
+        {% for k,v in request.GET.items %}
+          {% if k != "q" and k != "status" and k != "hal" %}
+            <input type="hidden" name="{{ k }}" value="{{ v }}">
+          {% endif %}
+        {% endfor %}
+        <button>Terapkan</button>
+      </form>
+    {% endif %}
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            {% for h in headers %}
+              <th scope="col">{{ h }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+            <tr>
+              {% for c in r.cells %}
+                <td>
+                  {% if r.prior_url and forloop.last %}
+                    <a href="{{ r.prior_url }}">{{ c|amount }}</a>
+                  {% elif forloop.first and r.url or r.report and r.url and forloop.last or r.prior_url %}
+                    <a href="{{ r.url }}">{{ c|amount }}</a>
+                  {% elif statuses and forloop.last %}
+                    <span class="status-chip" data-status="{{ c }}">{{ c }}</span>
+              {% else %}{{ c|amount }}{% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="{{ headers|length }}" class="empty-state">
+                <svg>
+                  <use href="#doc" />
+                </svg>
+                <b>Belum ada data</b>Periksa filter atau tanggal yang dipilih.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <footer class="pagination">
+      <span>
+        {% if page.paginator.count %}{{ page.start_index }}–{{ page.end_index }} dari {{ page.paginator.count }} baris{% else %}0 baris{% endif %}
+      </span>
+      <div>
+        {% if page.has_previous %}
+          <a class="outline"
+             href="{% querystring hal=page.previous_page_number %}">← Sebelumnya</a>
+        {% endif %}
+        {% if page.has_next %}
+          <a class="outline" href="{% querystring hal=page.next_page_number %}">Berikutnya →</a>
+        {% endif %}
+      </div>
+    </footer>
+  </section>
+{% endblock %}

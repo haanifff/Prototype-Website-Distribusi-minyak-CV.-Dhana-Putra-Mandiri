@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load display %}
+{% block content %}
+  <h1>{{ title }}</h1>
+  <form class="tools" method="get">
+    <label>
+      Bulan<input type="month" name="bulan" value="{{ month }}">
+    </label>
+    <button>Tampilkan</button>
+  </form>
+  <form class="panel formgrid" method="post">
+    {% csrf_token %}
+    <input name="month" value="{{ month }}" type="hidden">
+    <h2 class="wide">{{ month }} · {{ period.status|default:"Terbuka" }}</h2>
+    {% for k,v in balances.items %}
+      <label>{{ k }} · buku {{ v|rupiah }}{% if user.role == "Keuangan" %}
+        <input type="number"
+               name="{{ k }}"
+               required
+               placeholder="Saldo hasil pemeriksaan">
+    {% endif %}
+  </label>
+{% endfor %}
+<label class="wide">
+  Catatan pemeriksaan atau alasan<textarea name="note" required maxlength="300">
+</textarea>
+</label>
+<div class="wide">
+  {% if user.role == "Keuangan" %}
+    <button name="action" value="ajukan">Ajukan tutup buku</button>
+  {% else %}
+    <button name="action" value="tutup">Setujui penutupan</button>
+    <button class="secondary" name="action" value="buka">Buka kembali</button>
+  {% endif %}
+</div>
+</form>
+<section class="panel pad">
+  <h2>Riwayat periode</h2>
+  {% for e in events %}
+    <p>
+      {{ e.time }} · {{ e.actor.first_name }} · {{ e.action }}
+      <br>
+      {{ e.reason }}
+    </p>
+  {% empty %}
+    <p>Belum ada keputusan periode.</p>
+  {% endfor %}
+</section>
+{% endblock %}

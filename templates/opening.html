@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ title }}</h1>
+  <p>Ajukan satu bukti per akun, produk atau faktur. Pemilik memeriksa setiap bukti sebelum transaksi pertama.</p>
+  <form method="post" class="panel formgrid">
+    {% csrf_token %}
+    <input type="hidden" name="token" value="{{ token }}">
+    <label>
+      Tanggal efektif<input type="date" name="day" required>
+    </label>
+    <label>
+      Nomor bukti / faktur awal<input name="proof" required>
+    </label>
+    <label>
+      Akun<select name="account">
+      {% for a in accounts %}
+        <option>{{ a }}</option>
+      {% endfor %}
+      </select>
+    </label>
+    <label>
+      Nilai (Rp)<input type="number" name="amount" min="1" required>
+    </label>
+    <label>
+      Mitra tagihan<select name="party">
+      <option value="">—</option>
+      {% for p in parties %}
+        <option value="{{ p.pk }}">{{ p }}</option>
+      {% endfor %}
+      </select>
+    </label>
+    <label>
+      Jatuh tempo tagihan<input type="date" name="due">
+    </label>
+    <label>
+      Produk persediaan<select name="product">
+      <option value="">—</option>
+      {% for p in products %}
+        <option value="{{ p.pk }}">{{ p }}</option>
+      {% endfor %}
+      </select>
+    </label>
+    <label>
+      Jumlah satuan dasar<input name="qty" type="number" min="1">
+    </label>
+    <div>
+      <button>Ajukan ke pemilik</button>
+    </div>
+  </form>
+{% endblock %}

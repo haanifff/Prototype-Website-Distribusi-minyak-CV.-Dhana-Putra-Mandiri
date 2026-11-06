@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% load display %}
+{% block content %}
+  <div class="pagehead">
+    <div>
+      <div class="eyebrow">DOKUMEN {{ doc.kind|upper }}</div>
+      <h1>{{ title }}</h1>
+      <p>{{ doc }} · {{ doc.date }} · {{ doc.party|default:"Internal" }}</p>
+    </div>
+    <span class="pill">{{ doc.status }}</span>
+  </div>
+  {% if doc.ref %}
+    <p>
+      Dokumen asal <a href="/dokumen/{{ doc.ref_id }}/">{{ doc.ref }}</a>
+    </p>
+  {% endif %}
+  {% if doc.draft_date %}
+    <p>Tanggal draf {{ doc.draft_date }} · Dibukukan {{ doc.date }}</p>
+  {% endif %}
+  {% if doc.kind == "Saldo awal" %}
+    <p>{{ doc.opening.account }} · {{ doc.opening.amount|rupiah }} · Bukti {{ doc.proof }}</p>
+  {% endif %}
+  {% if doc.note %}
+    <p>{{ doc.note }}</p>
+  {% endif %}
+  {% if doc.terms and doc.kind == "Penjualan" %}
+    <p>{{ doc.terms }} · Jatuh tempo {{ doc.due }}</p>
+  {% endif %}
+  <section class="panel scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Produk</th>
+          <th>Jumlah</th>
+          <th>Satuan</th>
+          {% if doc.kind == "Retur" %}
+            <th>Kondisi</th>
+          {% endif %}
+          {% if pricing and doc.kind == "Penjualan" %}
+            <th>Harga jual</th>
+            <th>Diskon</th>
+          {% endif %}
+          {% if finance %}
+            <th>Harga pokok baris</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lines %}
+          <tr>
+            <td>{{ l.product }}</td>
+            <td>
+            {% if l.direction < 0 %}−{% endif %}{{ l.qty }}</td>
+            <td>{{ l.product.unit }}</td>
+            {% if doc.kind == "Retur" %}
+              <td>{{ l.damaged|yesno:"Rusak,Layak jual" }}</td>
+            {% endif %}
+            {% if pricing and doc.kind == "Penjualan" %}
+              <td>{{ l.price|rupiah }}</td>
+              <td>{{ l.discount|rupiah }}</td>
+            {% endif %}
+            {% if finance %}
+              <td>{{ l.cost|rupiah }}</td>
+            {% endif %}
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5">Dokumen mutasi dana</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% if can_book %}
+    <form method="post" class="panel formgrid">
+      {% csrf_token %}
+      <h2 class="wide">
+        {% if doc.kind == "Penjualan" %}Konfirmasi penyerahan{% else %}Verifikasi dan bukukan{% endif %}
+      </h2>
+      <label>
+        Tanggal efektif<input type="date" name="day" value="{{ today|date:'Y-m-d' }}" required>
+      </label>
+      {% if doc.kind == "Penerimaan" %}
+        <label>
+          Nomor bukti unik<input name="proof" required maxlength="80">
+        </label>
+        <label>
+          Transport pada bukti (Rp)<input type="number" name="freight" min="0" value="0">
+        </label>
+        <label>
+          Bongkar pada bukti (Rp)<input type="number" name="unload" min="0" value="0">
+        </label>
+        <label>
+          Bukti transport terpisah<input name="freight_proof"
+                                         maxlength="80"
+                                         placeholder="Kosong jika satu bukti penerimaan">
+        </label>
+        <label>
+          Bukti bongkar terpisah<input name="unload_proof"
+                                       maxlength="80"
+                                       placeholder="Kosong jika satu bukti penerimaan">
+        </label>
+        <label>
+          Pembayaran<select name="fund">
+          <option value="">Tempo · utang pemasok</option>
+          {% for f in funds %}
+            <option>{{ f }}</option>
+          {% endfor %}
+          </select>
+        </label>
+      {% endif %}
+      {% for l in lines %}
+        {% if doc.kind == "Penerimaan" %}
+          <div class="lineform wide">
+            <b>{{ l.product.code }}</b>
+            <label>
+              Harga beli per {{ l.product.unit }}<input type="number" min="1" name="price_{{ l.pk }}" required>
+            </label>
+            <label>
+              Alokasi transport<input type="number" min="0" value="0" name="freight_{{ l.pk }}">
+            </label>
+            <label>
+              Alokasi bongkar<input type="number" min="0" value="0" name="unload_{{ l.pk }}">
+            </label>
+          </div>
+        {% elif doc.kind == "Penjualan" %}
+          <label>
+            {{ l.product.code }} · jumlah diserahkan<input type="number" min="1" name="qty_{{ l.pk }}" required>
+          </label>
+        {% endif %}
+      {% endfor %}
+      <div class="wide">
+        <button>Bukukan {{ doc.kind|lower }}</button>
+      </div>
+    </form>
+  {% endif %}
+  {% if doc.kind == "Penjualan" and doc.status == "Dibukukan" %}
+    <a class="button" href="/dokumen/{{ doc.pk }}/surat-jalan/">Buka surat jalan</a>
+  {% endif %}
+  {% if finance and doc.kind == "Penerimaan" and doc.status == "Dibukukan" %}
+    <section class="panel pad">
+      <h2>Perolehan persediaan</h2>
+      <p>Transport {{ doc.freight|rupiah }} · Bongkar {{ doc.unload|rupiah }} · Bukti {{ doc.proof }}</p>
+      {% for proof in doc.costproof_set.all %}
+        <p>{{ proof.code }} · {{ proof.purpose }}</p>
+      {% endfor %}
+      <div class="scroll">
+        <table>
+          <tr>
+            <th>Produk</th>
+            <th>Harga beli per unit</th>
+            <th>Alokasi transport</th>
+            <th>Alokasi bongkar</th>
+          </tr>
+          {% for l in lines %}
+            <tr>
+              <td>{{ l.product.code }}</td>
+              <td>{{ l.price|rupiah }}</td>
+              <td>{{ l.freight|rupiah }}</td>
+              <td>{{ l.unload|rupiah }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </section>
+  {% endif %}
+  {% if entries %}
+    <section class="panel scroll accounting">
+      <h2>Jurnal transaksi</h2>
+      <table>
+        <tr>
+          <th>Akun</th>
+          <th>Debit (+) / Kredit (−)</th>
+        </tr>
+        {% for e in entries %}
+          <tr>
+            <td>{{ e.account }}</td>
+            <td>{{ e.amount|rupiah }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </section>
+  {% endif %}
+  {% if user.role == "Keuangan" and doc.status == "Dibukukan" and doc.kind != "Pembatalan" and doc.kind != "Saldo awal" %}
+    <details class="panel pad">
+      <summary>Koreksi dengan jurnal pembalik</summary>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="reverse">
+        <label>
+          Alasan pembatalan<input name="reason" required>
+        </label>
+        <button>Bukukan pembatalan</button>
+      </form>
+    </details>
+  {% endif %}
+  {% if cancel or doc.kind == "Saldo awal" and can_book %}
+    <details class="panel pad">
+      <summary>Batalkan draf</summary>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="cancel">
+        <label>
+          Alasan<input name="reason" required>
+        </label>
+        <button>Batalkan draf</button>
+      </form>
+    </details>
+  {% endif %}
+{% endblock %}

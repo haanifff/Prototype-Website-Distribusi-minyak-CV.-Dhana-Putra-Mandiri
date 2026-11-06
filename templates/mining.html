@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load display %}
+{% block content %}
+  <div class="pagehead">
+    <div>
+      <div class="eyebrow">DATA MINING</div>
+      <h1>{{ title }}</h1>
+      <p>Pembaruan {{ updated|date:"d M Y, H:i"|default:"belum ada" }} WIB</p>
+    </div>
+    {% include "filter.html" %}
+  </div>
+  <section class="panel">
+    <div class="panelhead">
+      <div>
+        <small>KLASIFIKASI ABC</small>
+        <h2>Prioritas pemeriksaan stok</h2>
+      </div>
+    </div>
+    <div class="scroll">
+      <table>
+        <tr>
+          <th>Produk</th>
+          <th>Kelas</th>
+          <th>Stok</th>
+          {% if finance %}
+            <th>Nilai pemakaian</th>
+            <th>Kontribusi</th>
+            <th>Kumulatif</th>
+            <th>Dokumen</th>
+          {% endif %}
+        </tr>
+        {% for r in rows %}
+          <tr>
+            <td>
+              <a href="/stok/?produk={{ r.product.pk }}&awal={{ start|date:'Y-m-d' }}&akhir={{ end|date:'Y-m-d' }}">{{ r.product }}</a>
+            </td>
+            <td>
+              <span class="grade grade{{ r.class }}">{{ r.class }}</span>
+            </td>
+            <td>{{ r.stock }} {{ r.product.unit }}</td>
+            {% if finance %}
+              <td>{{ r.usage|rupiah }}</td>
+              <td>{{ r.share|floatformat:1 }}%</td>
+              <td>{{ r.cumulative|floatformat:1 }}%</td>
+              <td>
+                <details>
+                  <summary>{{ r.ids|length }} dokumen</summary>
+                  {% for pk in r.ids %}
+                    <a href="/dokumen/{{ pk }}/">#{{ pk }}</a> {% endfor %}
+                </details>
+              </td>
+            {% endif %}
+          </tr>
+        {% empty %}
+          <tr>
+            <td>Belum ada produk.</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panelhead">
+      <div>
+        <small>ESTIMASI PERMINTAAN</small>
+        <h2>Risiko kehabisan stok</h2>
+        <p>Riwayat {{ begin }} – {{ cutoff }}. Saldo stok per {{ end }}. Uji historis memakai data latih {{ eval_begin }} – {{ eval_cutoff }} dan tujuh hari realisasi sesudahnya sampai {{ horizon }}.</p>
+      </div>
+    </div>
+    <div class="scroll">
+      <table>
+        <tr>
+          <th>Produk</th>
+          <th>Estimasi per hari</th>
+          <th>Cakupan / waktu tunggu</th>
+          <th>Status dan alasan</th>
+          <th>Kualitas data</th>
+          <th>Galat absolut rata-rata</th>
+        </tr>
+        {% for r in rows %}
+          <tr>
+            <td>{{ r.product.code }}</td>
+            <td>{% if r.rate != None %}{{ r.rate|floatformat:2 }} {{ r.product.unit }}{% else %}—{% endif %}</td>
+            <td>{{ r.coverage|floatformat:1|default:"—" }} / {{ r.lead|default_if_none:"—" }} hari</td>
+            <td>
+              <strong>{{ r.risk }}</strong>
+              {% if r.risk == "Berisiko" %}
+                <br>Stok cukup {{ r.coverage|floatformat:1 }} hari, waktu tunggu {{ r.lead }} hari.{% endif %}
+            </td>
+            <td>{{ r.missing }} hari belum lengkap · {{ r.outages }} hari stok kosong</td>
+            <td>
+              {% if r.mae != None %}{{ r.mae|floatformat:2 }} {{ r.product.unit }}/hari{% else %}Menunggu riwayat lengkap{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </section>
+{% endblock %}
